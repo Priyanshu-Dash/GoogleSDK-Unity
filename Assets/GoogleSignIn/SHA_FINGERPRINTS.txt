@@ -1,0 +1,45 @@
+========================================
+SHA FINGERPRINTS FOR GOOGLE SIGN-IN
+========================================
+
+Keystore: user.keystore
+Alias: dev
+Password: 123456
+
+----------------------------------------
+SHA-1 FINGERPRINT (Required for Android)
+----------------------------------------
+72:38:37:A2:65:61:64:E3:9D:52:A8:64:AD:21:7D:8E:EB:A2:6F:51
+
+----------------------------------------
+SHA-256 FINGERPRINT (Optional)
+----------------------------------------
+15:26:37:20:C3:1B:73:59:FD:D9:0F:68:82:3B:D1:D4:1E:7E:AC:F9:78:1B:3C:56:84:72:D8:23:DF:CF:11:C2
+
+========================================
+HOW TO USE IN GOOGLE CLOUD CONSOLE
+========================================
+
+1. Go to: https://console.cloud.google.com/
+2. Select your project
+3. Navigate to: APIs & Services > Credentials
+4. Click: Create Credentials > OAuth client ID
+5. Select: Android
+6. Enter your Package Name (from Unity Player Settings)
+7. Paste the SHA-1 fingerprint above
+8. Click: Create
+
+========================================
+CERTIFICATE DETAILS
+========================================
+Owner: O=Priyanshu
+Valid from: Dec 09, 2025
+Valid until: Nov 27, 2075
+Algorithm: SHA1withRSA (2048-bit RSA)
+
+========================================
+NOTE
+========================================
+⚠️ The certificate uses SHA1withRSA which is considered a security risk.
+For production, consider generating a new keystore with SHA256withRSA.
+
