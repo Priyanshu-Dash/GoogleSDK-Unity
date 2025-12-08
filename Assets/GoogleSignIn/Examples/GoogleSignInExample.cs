@@ -1,6 +1,8 @@
 using GoogleSignIn;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Networking;
+using System.Collections;
 using TMPro;
 
 namespace GoogleSignIn.Examples
@@ -16,6 +18,7 @@ namespace GoogleSignIn.Examples
         public Button signOutButton;
         public Button checkUserButton;
         public TextMeshProUGUI statusText;
+        public Image profileImage;
 
         [Header("Configuration")]
         [Tooltip("Optional: Server Client ID for backend authentication")]
@@ -58,6 +61,12 @@ namespace GoogleSignIn.Examples
                     Debug.Log($"User ID: {result.User.Id}");
                     Debug.Log($"ID Token: {result.User.IdToken}");
                     
+                    // Load and display profile picture
+                    if (!string.IsNullOrEmpty(result.User.PhotoUrl))
+                    {
+                        StartCoroutine(LoadProfilePicture(result.User.PhotoUrl));
+                    }
+                    
                     if (!string.IsNullOrEmpty(result.User.ServerAuthCode))
                     {
                         Debug.Log($"Server Auth Code: {result.User.ServerAuthCode}");
@@ -82,6 +91,12 @@ namespace GoogleSignIn.Examples
                 {
                     UpdateStatus("Signed out successfully!");
                     Debug.Log("User signed out");
+                    
+                    // Clear profile picture on sign out
+                    if (profileImage != null)
+                    {
+                        profileImage.sprite = null;
+                    }
                 }
                 else
                 {
@@ -101,11 +116,22 @@ namespace GoogleSignIn.Examples
                 {
                     UpdateStatus($"Current user:\nName: {user.DisplayName}\nEmail: {user.Email}");
                     Debug.Log($"User is signed in: {user.DisplayName}");
+                    
+                    // Load and display profile picture
+                    if (!string.IsNullOrEmpty(user.PhotoUrl))
+                    {
+                        StartCoroutine(LoadProfilePicture(user.PhotoUrl));
+                    }
                 }
                 else
                 {
                     UpdateStatus("No user is currently signed in");
                     Debug.Log("No user signed in");
+                    // Clear profile picture if no user
+                    if (profileImage != null)
+                    {
+                        profileImage.sprite = null;
+                    }
                 }
             });
         }
@@ -117,6 +143,47 @@ namespace GoogleSignIn.Examples
                 statusText.text = message;
             }
             Debug.Log($"[GoogleSignIn] {message}");
+        }
+
+        private IEnumerator LoadProfilePicture(string photoUrl)
+        {
+            if (profileImage == null)
+            {
+                Debug.LogWarning("Profile Image UI component is not assigned. Please assign it in the inspector.");
+                yield break;
+            }
+
+            if (string.IsNullOrEmpty(photoUrl))
+            {
+                Debug.LogWarning("Photo URL is empty.");
+                yield break;
+            }
+
+            using (UnityWebRequest www = UnityWebRequestTexture.GetTexture(photoUrl))
+            {
+                yield return www.SendWebRequest();
+
+                if (www.result == UnityWebRequest.Result.Success)
+                {
+                    Texture2D texture = DownloadHandlerTexture.GetContent(www);
+                    if (texture != null)
+                    {
+                        // Create a sprite from the texture
+                        Sprite sprite = Sprite.Create(
+                            texture,
+                            new Rect(0, 0, texture.width, texture.height),
+                            new Vector2(0.5f, 0.5f)
+                        );
+                        
+                        profileImage.sprite = sprite;
+                        Debug.Log("Profile picture loaded successfully");
+                    }
+                }
+                else
+                {
+                    Debug.LogError($"Failed to load profile picture: {www.error}");
+                }
+            }
         }
 
         private void OnDestroy()
