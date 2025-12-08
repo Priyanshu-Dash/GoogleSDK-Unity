@@ -9,8 +9,16 @@ extern "C" {
 
 static NSString* serverClientId = nil;
 
+// Forward declaration
+NSString* userToJsonWithServerAuthCode(GIDGoogleUser* user, NSString* serverAuthCode);
+
 // Helper function to convert GoogleSignInUser to JSON
 NSString* userToJson(GIDGoogleUser* user) {
+    return userToJsonWithServerAuthCode(user, @"");
+}
+
+// Helper function to convert GoogleSignInUser to JSON with server auth code
+NSString* userToJsonWithServerAuthCode(GIDGoogleUser* user, NSString* serverAuthCode) {
     NSMutableDictionary* dict = [NSMutableDictionary dictionary];
     
     if (user.userID) {
@@ -31,8 +39,14 @@ NSString* userToJson(GIDGoogleUser* user) {
         dict[@"DisplayName"] = @"";
     }
     
-    if (user.profile.imageURL) {
-        dict[@"PhotoUrl"] = [user.profile.imageURL absoluteString];
+    // Get profile image URL - API changed in SDK 7.0
+    NSURL* imageURL = nil;
+    if (user.profile.hasImage) {
+        // Use imageURLWithDimension: method for SDK 7.0+
+        imageURL = [user.profile imageURLWithDimension:128];
+    }
+    if (imageURL) {
+        dict[@"PhotoUrl"] = [imageURL absoluteString];
     } else {
         dict[@"PhotoUrl"] = @"";
     }
@@ -43,11 +57,8 @@ NSString* userToJson(GIDGoogleUser* user) {
         dict[@"IdToken"] = @"";
     }
     
-    if (user.serverAuthCode) {
-        dict[@"ServerAuthCode"] = user.serverAuthCode;
-    } else {
-        dict[@"ServerAuthCode"] = @"";
-    }
+    // Use provided server auth code (from sign-in result)
+    dict[@"ServerAuthCode"] = serverAuthCode ? serverAuthCode : @"";
     
     if (user.accessToken.tokenString) {
         dict[@"AccessToken"] = user.accessToken.tokenString;
@@ -99,7 +110,14 @@ extern "C" {
                 NSString* message = [NSString stringWithFormat:@"%@|%d", errorMsg, errorCode];
                 UnitySendMessage("GoogleSignInManager", "OnSignInError", [message UTF8String]);
             } else if (result && result.user) {
-                NSString* userJson = userToJson(result.user);
+                // Get server auth code from result if available
+                NSString* serverAuthCode = @"";
+                if (result.serverAuthCode) {
+                    serverAuthCode = result.serverAuthCode;
+                }
+                
+                // Create user JSON with server auth code
+                NSString* userJson = userToJsonWithServerAuthCode(result.user, serverAuthCode);
                 UnitySendMessage("GoogleSignInManager", "OnSignInSuccess", [userJson UTF8String]);
             } else {
                 UnitySendMessage("GoogleSignInManager", "OnSignInError", "Sign in failed: No user data|0");
@@ -108,14 +126,12 @@ extern "C" {
     }
     
     void _GoogleSignIn_SignOut() {
-        [[GIDSignIn sharedInstance] signOutWithCompletion:^(NSError* error) {
-            if (error) {
-                NSString* errorMsg = [NSString stringWithFormat:@"Sign out failed: %@", error.localizedDescription];
-                UnitySendMessage("GoogleSignInManager", "OnSignOutError", [errorMsg UTF8String]);
-            } else {
-                UnitySendMessage("GoogleSignInManager", "OnSignOutSuccess", "");
-            }
-        }];
+        // API changed in SDK 7.0+ - signOut doesn't have completion handler
+        // Sign out is synchronous, so we call it directly
+        [[GIDSignIn sharedInstance] signOut];
+        
+        // Sign out is synchronous, so we can send success immediately
+        UnitySendMessage("GoogleSignInManager", "OnSignOutSuccess", "");
     }
     
     void _GoogleSignIn_GetCurrentUser() {

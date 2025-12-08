@@ -1,0 +1,24 @@
+# Podfile for Google Sign-In iOS
+# This file is automatically used by Unity when building iOS projects
+# Unity will copy this to the Xcode project directory during build
+
+platform :ios, '12.0'
+
+target 'UnityFramework' do
+  # Google Sign-In SDK - Latest version 9.0.0 (July 2025)
+  # Using ~> 9.0 will get the latest 9.x version
+  pod 'GoogleSignIn', '~> 9.0'
+end
+
+# Fix deployment target warnings
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      if config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'].to_f < 12.0
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '12.0'
+      end
+    end
+  end
+end
+
+

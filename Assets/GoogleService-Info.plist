@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>898616092916-15qcum71b3crmoajue9jja2fpmnc1oog.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.898616092916-15qcum71b3crmoajue9jja2fpmnc1oog</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>898616092916-o4paki4nda775ar84tscqfs2j87sucgl.apps.googleusercontent.com</string>
+	<key>API_KEY</key>
+	<string>AIzaSyCoejIUwYNjw6O6GdT2esk-Kia6Y0gPwlo</string>
+	<key>GCM_SENDER_ID</key>
+	<string>898616092916</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.Priyanshu.GoogleSigninSDK</string>
+	<key>PROJECT_ID</key>
+	<string>crossplatform-auth-app</string>
+	<key>STORAGE_BUCKET</key>
+	<string>crossplatform-auth-app.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:898616092916:ios:11dcd3bfcc3dbf600096a1</string>
+</dict>
+</plist>
