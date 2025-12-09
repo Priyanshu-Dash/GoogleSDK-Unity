@@ -8,16 +8,48 @@ extern "C" {
 }
 
 static NSString* serverClientId = nil;
+static BOOL isInitialized = NO;
+
+// Helper function to safely send message to Unity on main thread
+void SafeUnitySendMessage(const char* obj, const char* method, const char* msg) {
+    if ([NSThread isMainThread]) {
+        UnitySendMessage(obj, method, msg);
+    } else {
+        // Copy the message string since it might be deallocated before dispatch executes
+        char* msgCopy = (char*)malloc(strlen(msg) + 1);
+        strcpy(msgCopy, msg);
+        dispatch_async(dispatch_get_main_queue(), ^{
+            UnitySendMessage(obj, method, msgCopy);
+            free(msgCopy);
+        });
+    }
+}
+
+// Helper function to safely send message with NSString (handles memory properly)
+void SafeUnitySendMessageWithString(const char* obj, const char* method, NSString* msgString) {
+    const char* msg = [msgString UTF8String];
+    if ([NSThread isMainThread]) {
+        UnitySendMessage(obj, method, msg);
+    } else {
+        // Copy the message string since NSString might be deallocated before dispatch executes
+        char* msgCopy = (char*)malloc(strlen(msg) + 1);
+        strcpy(msgCopy, msg);
+        dispatch_async(dispatch_get_main_queue(), ^{
+            UnitySendMessage(obj, method, msgCopy);
+            free(msgCopy);
+        });
+    }
+}
 
 // Forward declaration
 NSString* userToJsonWithServerAuthCode(GIDGoogleUser* user, NSString* serverAuthCode);
 
 // Helper function to convert GoogleSignInUser to JSON
 NSString* userToJson(GIDGoogleUser* user) {
-    return userToJsonWithServerAuthCode(user, @"");
+    return userToJsonWithServerAuthCode(user, nil);
 }
 
-// Helper function to convert GoogleSignInUser to JSON with server auth code
+// Helper function to convert GoogleSignInUser to JSON with serverAuthCode
 NSString* userToJsonWithServerAuthCode(GIDGoogleUser* user, NSString* serverAuthCode) {
     NSMutableDictionary* dict = [NSMutableDictionary dictionary];
     
@@ -39,12 +71,8 @@ NSString* userToJsonWithServerAuthCode(GIDGoogleUser* user, NSString* serverAuth
         dict[@"DisplayName"] = @"";
     }
     
-    // Get profile image URL - API changed in SDK 7.0
-    NSURL* imageURL = nil;
-    if (user.profile.hasImage) {
-        // Use imageURLWithDimension: method for SDK 7.0+
-        imageURL = [user.profile imageURLWithDimension:128];
-    }
+    // GoogleSignIn 9.0: imageURL is now a method that takes dimension
+    NSURL* imageURL = [user.profile imageURLWithDimension:100];
     if (imageURL) {
         dict[@"PhotoUrl"] = [imageURL absoluteString];
     } else {
@@ -57,8 +85,12 @@ NSString* userToJsonWithServerAuthCode(GIDGoogleUser* user, NSString* serverAuth
         dict[@"IdToken"] = @"";
     }
     
-    // Use provided server auth code (from sign-in result)
-    dict[@"ServerAuthCode"] = serverAuthCode ? serverAuthCode : @"";
+    // GoogleSignIn 9.0: serverAuthCode is now on GIDSignInResult
+    if (serverAuthCode) {
+        dict[@"ServerAuthCode"] = serverAuthCode;
+    } else {
+        dict[@"ServerAuthCode"] = @"";
+    }
     
     if (user.accessToken.tokenString) {
         dict[@"AccessToken"] = user.accessToken.tokenString;
@@ -77,70 +109,138 @@ NSString* userToJsonWithServerAuthCode(GIDGoogleUser* user, NSString* serverAuth
 
 extern "C" {
     void _GoogleSignIn_Initialize(const char* serverClientIdStr) {
+        // Ensure initialization happens on main thread
+        if (![NSThread isMainThread]) {
+            dispatch_async(dispatch_get_main_queue(), ^{
+                _GoogleSignIn_Initialize(serverClientIdStr);
+            });
+            return;
+        }
+        
         if (serverClientIdStr && strlen(serverClientIdStr) > 0) {
             serverClientId = [NSString stringWithUTF8String:serverClientIdStr];
         }
         
         // Get the client ID from GoogleService-Info.plist
         NSString* path = [[NSBundle mainBundle] pathForResource:@"GoogleService-Info" ofType:@"plist"];
-        NSDictionary* plist = [NSDictionary dictionaryWithContentsOfFile:path];
-        NSString* clientId = [plist objectForKey:@"CLIENT_ID"];
-        
-        if (!clientId) {
-            UnitySendMessage("GoogleSignInManager", "OnSignInError", "GoogleService-Info.plist not found or CLIENT_ID missing|0");
+        if (!path) {
+            NSLog(@"[GoogleSignIn] ERROR: GoogleService-Info.plist not found in bundle");
+            SafeUnitySendMessage("GoogleSignInManager", "OnSignInError", "GoogleService-Info.plist not found in app bundle|0");
             return;
         }
         
-        GIDConfiguration* config = [[GIDConfiguration alloc] initWithClientID:clientId];
-        if (serverClientId) {
+        NSDictionary* plist = [NSDictionary dictionaryWithContentsOfFile:path];
+        if (!plist) {
+            NSLog(@"[GoogleSignIn] ERROR: Failed to read GoogleService-Info.plist");
+            SafeUnitySendMessage("GoogleSignInManager", "OnSignInError", "Failed to read GoogleService-Info.plist|0");
+            return;
+        }
+        
+        NSString* clientId = [plist objectForKey:@"CLIENT_ID"];
+        if (!clientId || [clientId length] == 0) {
+            NSLog(@"[GoogleSignIn] ERROR: CLIENT_ID not found in GoogleService-Info.plist");
+            SafeUnitySendMessage("GoogleSignInManager", "OnSignInError", "CLIENT_ID missing from GoogleService-Info.plist|0");
+            return;
+        }
+        
+        GIDConfiguration* config = nil;
+        if (serverClientId && [serverClientId length] > 0) {
             config = [[GIDConfiguration alloc] initWithClientID:clientId serverClientID:serverClientId];
+            NSLog(@"[GoogleSignIn] Initializing with clientID and serverClientID");
+        } else {
+            config = [[GIDConfiguration alloc] initWithClientID:clientId];
+            NSLog(@"[GoogleSignIn] Initializing with clientID only");
+        }
+        
+        if (!config) {
+            NSLog(@"[GoogleSignIn] ERROR: Failed to create GIDConfiguration");
+            SafeUnitySendMessage("GoogleSignInManager", "OnSignInError", "Failed to create GIDConfiguration|0");
+            return;
         }
         
         [GIDSignIn sharedInstance].configuration = config;
+        isInitialized = YES;
+        
+        // Verify configuration was set
+        GIDConfiguration* verifyConfig = [GIDSignIn sharedInstance].configuration;
+        if (verifyConfig && verifyConfig.clientID) {
+            NSLog(@"[GoogleSignIn] Native initialization complete. ClientID: %@", verifyConfig.clientID);
+        } else {
+            NSLog(@"[GoogleSignIn] WARNING: Configuration set but verification failed!");
+        }
     }
     
     void _GoogleSignIn_SignIn() {
+        // Check if configuration is set (more reliable than static flag)
+        GIDSignIn* signIn = [GIDSignIn sharedInstance];
+        GIDConfiguration* config = signIn.configuration;
+        
+        NSLog(@"[GoogleSignIn] SignIn called. Config exists: %d, ClientID: %@, isInitialized flag: %d", 
+              (config != nil), 
+              (config ? config.clientID : @"nil"), 
+              isInitialized);
+        
+        if (!config || !config.clientID) {
+            NSLog(@"[GoogleSignIn] ERROR: Not initialized! Configuration is nil or missing clientID. Attempting to re-initialize...");
+            
+            // Try to re-initialize automatically
+            NSString* path = [[NSBundle mainBundle] pathForResource:@"GoogleService-Info" ofType:@"plist"];
+            if (path) {
+                NSDictionary* plist = [NSDictionary dictionaryWithContentsOfFile:path];
+                NSString* clientId = [plist objectForKey:@"CLIENT_ID"];
+                if (clientId) {
+                    GIDConfiguration* autoConfig = [[GIDConfiguration alloc] initWithClientID:clientId];
+                    signIn.configuration = autoConfig;
+                    NSLog(@"[GoogleSignIn] Auto-reinitialized with clientID: %@", clientId);
+                } else {
+                    SafeUnitySendMessage("GoogleSignInManager", "OnSignInError", "Google Sign-In not initialized. Call Initialize() first|0");
+                    return;
+                }
+            } else {
+                SafeUnitySendMessage("GoogleSignInManager", "OnSignInError", "Google Sign-In not initialized. Call Initialize() first|0");
+                return;
+            }
+        }
+        
         UIViewController* rootViewController = UnityGetGLViewController();
+        if (!rootViewController) {
+            SafeUnitySendMessage("GoogleSignInManager", "OnSignInError", "Root view controller is nil|0");
+            return;
+        }
         
         [[GIDSignIn sharedInstance] signInWithPresentingViewController:rootViewController
                                                               completion:^(GIDSignInResult* result, NSError* error) {
-            if (error) {
-                NSString* errorMsg = [NSString stringWithFormat:@"Sign in failed: %@", error.localizedDescription];
-                int errorCode = (int)error.code;
-                NSString* message = [NSString stringWithFormat:@"%@|%d", errorMsg, errorCode];
-                UnitySendMessage("GoogleSignInManager", "OnSignInError", [message UTF8String]);
-            } else if (result && result.user) {
-                // Get server auth code from result if available
-                NSString* serverAuthCode = @"";
-                if (result.serverAuthCode) {
-                    serverAuthCode = result.serverAuthCode;
+            // Completion handler may be called on background thread, so dispatch to main thread
+            dispatch_async(dispatch_get_main_queue(), ^{
+                if (error) {
+                    NSString* errorMsg = [NSString stringWithFormat:@"Sign in failed: %@", error.localizedDescription];
+                    int errorCode = (int)error.code;
+                    NSString* message = [NSString stringWithFormat:@"%@|%d", errorMsg, errorCode];
+                    SafeUnitySendMessageWithString("GoogleSignInManager", "OnSignInError", message);
+                } else if (result && result.user) {
+                    // GoogleSignIn 9.0: serverAuthCode is now on GIDSignInResult
+                    NSString* userJson = userToJsonWithServerAuthCode(result.user, result.serverAuthCode);
+                    SafeUnitySendMessageWithString("GoogleSignInManager", "OnSignInSuccess", userJson);
+                } else {
+                    SafeUnitySendMessage("GoogleSignInManager", "OnSignInError", "Sign in failed: No user data|0");
                 }
-                
-                // Create user JSON with server auth code
-                NSString* userJson = userToJsonWithServerAuthCode(result.user, serverAuthCode);
-                UnitySendMessage("GoogleSignInManager", "OnSignInSuccess", [userJson UTF8String]);
-            } else {
-                UnitySendMessage("GoogleSignInManager", "OnSignInError", "Sign in failed: No user data|0");
-            }
+            });
         }];
     }
     
     void _GoogleSignIn_SignOut() {
-        // API changed in SDK 7.0+ - signOut doesn't have completion handler
-        // Sign out is synchronous, so we call it directly
+        // GoogleSignIn 9.0: signOutWithCompletion is replaced with signOut() (synchronous)
         [[GIDSignIn sharedInstance] signOut];
-        
-        // Sign out is synchronous, so we can send success immediately
-        UnitySendMessage("GoogleSignInManager", "OnSignOutSuccess", "");
+        SafeUnitySendMessage("GoogleSignInManager", "OnSignOutSuccess", "");
     }
     
     void _GoogleSignIn_GetCurrentUser() {
         GIDGoogleUser* user = [[GIDSignIn sharedInstance] currentUser];
         if (user) {
             NSString* userJson = userToJson(user);
-            UnitySendMessage("GoogleSignInManager", "OnGetUserSuccess", [userJson UTF8String]);
+            SafeUnitySendMessageWithString("GoogleSignInManager", "OnGetUserSuccess", userJson);
         } else {
-            UnitySendMessage("GoogleSignInManager", "OnGetUserError", "");
+            SafeUnitySendMessage("GoogleSignInManager", "OnGetUserError", "");
         }
     }
     

@@ -1,8 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <dependencies>
-  <iosPods>
-    <!-- Latest Google Sign-In SDK version 9.0.0 (July 2025) -->
-    <iosPod name="GoogleSignIn" version="~> 9.0" />
-  </iosPods>
+    <iosPods>
+        <iosPod name="GoogleSignIn" version="~> 9.0" />
+    </iosPods>
 </dependencies>
-

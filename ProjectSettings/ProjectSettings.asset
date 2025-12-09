@@ -169,7 +169,7 @@ PlayerSettings:
   applicationIdentifier:
     Android: com.Priyanshu.GoogleSigninSDK
     Standalone: com.Unity-Technologies.com.unity.template.urp-blank
-    iPhone: com.Priyanshu.Google-Signin-SDK
+    iPhone: com.Priyanshu.GoogleSigninSDK
   buildNumber:
     Standalone: 0
     VisionOS: 0

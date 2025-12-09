@@ -1,11 +1,12 @@
 # Example Podfile for Google Sign-In iOS
 # Copy this to Assets/Plugins/iOS/Podfile
 # After building Xcode project, run: pod install
+# GoogleSignIn 9.0 requires iOS 12.0 minimum
 
-platform :ios, '11.0'
+platform :ios, '12.0'
 
 target 'UnityFramework' do
-  # Google Sign-In SDK
-  pod 'GoogleSignIn', '~> 7.0'
+  # Google Sign-In SDK (Latest version 9.0.0)
+  pod 'GoogleSignIn', '~> 9.0'
 end
 

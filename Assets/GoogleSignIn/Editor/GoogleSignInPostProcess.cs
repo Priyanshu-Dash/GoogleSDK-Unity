@@ -7,129 +7,131 @@ using System.IO;
 
 namespace GoogleSignIn.Editor
 {
-    /// <summary>
-    /// Post-process build script for iOS Google Sign-In setup
-    /// Automatically configures Info.plist with URL schemes from GoogleService-Info.plist
-    /// </summary>
     public class GoogleSignInPostProcess
     {
         [PostProcessBuild(1)]
-        public static void OnPostprocessBuild(BuildTarget buildTarget, string pathToBuiltProject)
+        public static void OnPostProcessBuild(BuildTarget buildTarget, string path)
         {
             if (buildTarget != BuildTarget.iOS)
                 return;
 
-            Debug.Log("Google Sign-In: Starting iOS post-process build...");
-
-            // Note: If using External Dependency Manager (EDM4U), it will automatically handle
-            // CocoaPods dependencies via Dependencies.xml. The Podfile copying below is a fallback
-            // for projects not using EDM4U.
-            
-            // Copy Podfile to Xcode project directory (fallback if EDM4U is not used)
-            string podfileSource = Path.Combine(Application.dataPath, "Plugins", "iOS", "Podfile");
-            string podfileDest = Path.Combine(pathToBuiltProject, "Podfile");
-            
-            // Only copy if EDM4U hasn't already created a Podfile
-            if (File.Exists(podfileSource) && !File.Exists(podfileDest))
-            {
-                File.Copy(podfileSource, podfileDest, true);
-                Debug.Log($"Google Sign-In: Copied Podfile to {podfileDest}");
-            }
-            else if (File.Exists(podfileDest))
-            {
-                Debug.Log("Google Sign-In: Podfile already exists (likely created by External Dependency Manager)");
-            }
-
-            // Get the path to Info.plist
-            string plistPath = Path.Combine(pathToBuiltProject, "Info.plist");
-            if (!File.Exists(plistPath))
-            {
-                Debug.LogWarning("Google Sign-In: Info.plist not found at " + plistPath);
-                return;
-            }
-
-            // Read Info.plist
+            string plistPath = Path.Combine(path, "Info.plist");
             PlistDocument plist = new PlistDocument();
             plist.ReadFromFile(plistPath);
 
-            // Get the root dictionary
-            PlistElementDict rootDict = plist.root;
-
-            // Check if GoogleService-Info.plist exists in the project
+            // Read REVERSED_CLIENT_ID from GoogleService-Info.plist
             string googleServiceInfoPath = Path.Combine(Application.dataPath, "GoogleService-Info.plist");
-            if (!File.Exists(googleServiceInfoPath))
+            string reversedClientId = null;
+
+            if (File.Exists(googleServiceInfoPath))
             {
-                Debug.LogWarning("Google Sign-In: GoogleService-Info.plist not found in Assets folder. " +
-                    "Please download it from Firebase Console and add it to your Assets folder. " +
-                    "URL scheme configuration will be skipped.");
+                PlistDocument googleServiceInfo = new PlistDocument();
+                googleServiceInfo.ReadFromFile(googleServiceInfoPath);
+                reversedClientId = googleServiceInfo.root["REVERSED_CLIENT_ID"].AsString();
+            }
+
+            // Add URL scheme if REVERSED_CLIENT_ID is found
+            if (!string.IsNullOrEmpty(reversedClientId))
+            {
+                PlistElementArray urlTypes = plist.root.CreateArray("CFBundleURLTypes");
+                PlistElementDict urlType = urlTypes.AddDict();
+                PlistElementArray urlSchemes = urlType.CreateArray("CFBundleURLSchemes");
+                urlSchemes.AddString(reversedClientId);
+
+                Debug.Log($"[GoogleSignIn] Added URL scheme: {reversedClientId}");
             }
             else
             {
-                // Read GoogleService-Info.plist to get REVERSED_CLIENT_ID
-                PlistDocument googleServiceInfo = new PlistDocument();
-                googleServiceInfo.ReadFromFile(googleServiceInfoPath);
-                PlistElementDict googleServiceDict = googleServiceInfo.root;
+                Debug.LogWarning("[GoogleSignIn] REVERSED_CLIENT_ID not found in GoogleService-Info.plist. URL scheme not added.");
+            }
 
-                string reversedClientId = googleServiceDict["REVERSED_CLIENT_ID"]?.AsString();
-                if (string.IsNullOrEmpty(reversedClientId))
+            // Ensure GoogleService-Info.plist is copied to the build and added to Xcode project
+            string sourcePlist = Path.Combine(Application.dataPath, "GoogleService-Info.plist");
+            string destPlist = Path.Combine(path, "GoogleService-Info.plist");
+
+            if (File.Exists(sourcePlist))
+            {
+                File.Copy(sourcePlist, destPlist, true);
+                Debug.Log("[GoogleSignIn] Copied GoogleService-Info.plist to iOS build");
+                
+                // Add GoogleService-Info.plist to Xcode project so it's included in the bundle
+                string projPath = Path.Combine(path, "Unity-iPhone.xcodeproj", "project.pbxproj");
+                if (File.Exists(projPath))
                 {
-                    Debug.LogWarning("Google Sign-In: REVERSED_CLIENT_ID not found in GoogleService-Info.plist");
+                    PBXProject project = new PBXProject();
+                    project.ReadFromString(File.ReadAllText(projPath));
+                    
+                    string targetGuid = project.GetUnityMainTargetGuid();
+                    
+                    // Check if file already exists in project
+                    string existingFileGuid = project.FindFileGuidByProjectPath("GoogleService-Info.plist");
+                    string fileGuid;
+                    
+                    if (string.IsNullOrEmpty(existingFileGuid))
+                    {
+                        // Add as resource file (not source code) so it gets copied to bundle
+                        fileGuid = project.AddFile("GoogleService-Info.plist", "GoogleService-Info.plist", PBXSourceTree.Source);
+                        project.AddFileToBuild(targetGuid, fileGuid);
+                    }
+                    else
+                    {
+                        fileGuid = existingFileGuid;
+                        // Ensure it's added to build (try adding even if it might already be there - AddFileToBuild handles duplicates)
+                        project.AddFileToBuild(targetGuid, fileGuid);
+                    }
+                    
+                    File.WriteAllText(projPath, project.WriteToString());
+                    Debug.Log("[GoogleSignIn] Added GoogleService-Info.plist to Xcode project as resource");
                 }
                 else
                 {
-                    Debug.Log($"Google Sign-In: Found REVERSED_CLIENT_ID: {reversedClientId}");
-
-                    // Get or create CFBundleURLTypes array
-                    PlistElementArray urlTypes;
-                    if (rootDict.values.ContainsKey("CFBundleURLTypes"))
-                    {
-                        urlTypes = rootDict["CFBundleURLTypes"].AsArray();
-                    }
-                    else
-                    {
-                        urlTypes = rootDict.CreateArray("CFBundleURLTypes");
-                    }
-
-                    // Check if URL scheme already exists
-                    bool urlSchemeExists = false;
-                    foreach (PlistElement element in urlTypes.values)
-                    {
-                        PlistElementDict urlTypeDict = element.AsDict();
-                        if (urlTypeDict.values.ContainsKey("CFBundleURLSchemes"))
-                        {
-                            PlistElementArray schemes = urlTypeDict["CFBundleURLSchemes"].AsArray();
-                            foreach (PlistElement scheme in schemes.values)
-                            {
-                                if (scheme.AsString() == reversedClientId)
-                                {
-                                    urlSchemeExists = true;
-                                    break;
-                                }
-                            }
-                        }
-                        if (urlSchemeExists) break;
-                    }
-
-                    // Add URL scheme if it doesn't exist
-                    if (!urlSchemeExists)
-                    {
-                        PlistElementDict urlTypeDict = urlTypes.AddDict();
-                        PlistElementArray schemes = urlTypeDict.CreateArray("CFBundleURLSchemes");
-                        schemes.AddString(reversedClientId);
-                        Debug.Log($"Google Sign-In: Added URL scheme '{reversedClientId}' to Info.plist");
-                    }
-                    else
-                    {
-                        Debug.Log("Google Sign-In: URL scheme already exists in Info.plist");
-                    }
+                    Debug.LogWarning("[GoogleSignIn] Xcode project file not found. GoogleService-Info.plist copied but may need manual addition to Xcode project.");
                 }
             }
+            else
+            {
+                Debug.LogError("[GoogleSignIn] GoogleService-Info.plist not found in Assets folder!");
+            }
 
-            // Write the modified Info.plist
+            // Create Podfile if it doesn't exist (fallback if EDM4U didn't generate it)
+            string podfilePath = Path.Combine(path, "Podfile");
+            if (!File.Exists(podfilePath))
+            {
+                string podfileContent = @"# Podfile for Google Sign-In iOS
+# Generated by GoogleSignInPostProcess
+# GoogleSignIn 9.0 requires iOS 12.0 minimum
+
+platform :ios, '12.0'
+
+# Set minimum deployment target for all pods
+post_install do |installer|
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      if config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'].to_f < 12.0
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '12.0'
+      end
+    end
+  end
+end
+
+# Only link pods to UnityFramework to avoid duplicate symbols
+target 'UnityFramework' do
+  # Google Sign-In SDK (Latest version 9.0.0)
+  pod 'GoogleSignIn', '~> 9.0'
+end
+
+# Do NOT add pods to Unity-iPhone target to prevent duplicate class warnings
+";
+                File.WriteAllText(podfilePath, podfileContent);
+                Debug.Log("[GoogleSignIn] Created Podfile in iOS build directory");
+            }
+            else
+            {
+                Debug.Log("[GoogleSignIn] Podfile already exists, skipping creation");
+            }
+
             plist.WriteToFile(plistPath);
-            Debug.Log("Google Sign-In: iOS post-process build completed successfully");
         }
     }
 }
 #endif
-
