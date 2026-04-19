@@ -45,17 +45,59 @@ Unity **6** sample project and embedded UPM package for **native Google Sign-In*
 
 ---
 
-## Use only the package in another project
+## Install via Git URL (Package Manager)
 
-Add to your **`Packages/manifest.json`**:
+Use this when you want **`com.googlesignin.unity`** inside an **existing** Unity project without cloning the whole sample repo.
+
+The Git URL **must** include **`?path=Packages/com.googlesignin.unity`** so Unity knows which folder in the repo is the UPM package (it must contain a **`package.json`** with `"name": "com.googlesignin.unity"`).
+
+### Option A — `Packages/manifest.json` (recommended)
+
+1. Open **`Packages/manifest.json`** in your project.
+2. Inside the top-level **`"dependencies"`** object, add this line (merge with existing entries; keep commas valid JSON):
 
 ```json
-"dependencies": {
-  "com.googlesignin.unity": "https://github.com/Priyanshu-Dash/GoogleSDK-Unity.git?path=Packages/com.googlesignin.unity"
+"com.googlesignin.unity": "https://github.com/Priyanshu-Dash/GoogleSDK-Unity.git?path=Packages/com.googlesignin.unity"
+```
+
+Minimal example:
+
+```json
+{
+  "dependencies": {
+    "com.googlesignin.unity": "https://github.com/Priyanshu-Dash/GoogleSDK-Unity.git?path=Packages/com.googlesignin.unity",
+    "com.unity.collab-proxy": "2.12.4"
+  }
 }
 ```
 
-Then complete **EDM Force Resolve**, platform config (`google-services.json` / `GoogleService-Info.plist`, SHA fingerprints), and the **Android** notes in the next section (launcher activity + Gradle alignment).
+3. Save the file. Unity will download the package (watch the editor status bar). If nothing happens, switch away from the editor and back, or use **Window → Package Manager** and confirm the package appears under **In project**.
+
+**Pin a branch or tag** (stable upgrades) by appending **`#ref`** to the URL:
+
+```text
+https://github.com/Priyanshu-Dash/GoogleSDK-Unity.git?path=Packages/com.googlesignin.unity#main
+https://github.com/Priyanshu-Dash/GoogleSDK-Unity.git?path=Packages/com.googlesignin.unity#v1.0.0
+```
+
+Replace **`main`** / **`v1.0.0`** with your real branch or tag name.
+
+### Option B — Package Manager UI
+
+1. **Window → Package Manager**.
+2. Click **+** → **Add package from git URL…**.
+3. Paste the full URL (including **`?path=...`**):
+
+   `https://github.com/Priyanshu-Dash/GoogleSDK-Unity.git?path=Packages/com.googlesignin.unity`
+
+4. Click **Add**.
+
+If your Unity version does not accept the URL in the UI, use **Option A** instead.
+
+### After the package is installed
+
+- Run **Assets → External Dependency Manager → Android Resolver → Force Resolve** (and any iOS resolver steps).
+- Add **`google-services.json`** / **`GoogleService-Info.plist`**, register **SHA-1 / SHA-256** for Android, and align **Android** Gradle + launcher manifest with this repo’s **`Assets/Plugins/Android`** notes below (otherwise builds or sign-in callbacks may fail).
 
 ---
 
