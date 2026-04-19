@@ -10,20 +10,21 @@ The package lives at `Packages/com.googlesignin.unity` and is picked up automati
 
 ### Another project (git URL)
 
-Add to `Packages/manifest.json`:
+Add **External Dependency Manager** and this package to your project’s **`Packages/manifest.json`** (EDM cannot be declared as a Git dependency *inside* this package — Unity requires semver there — so you add EDM at the **root** of your manifest):
 
 ```json
 "dependencies": {
-  "com.googlesignin.unity": "https://github.com/YOUR_ORG/YOUR_REPO.git?path=Packages/com.googlesignin.unity"
+  "com.google.external-dependency-manager": "https://github.com/googlesamples/unity-jar-resolver.git?path=upm",
+  "com.googlesignin.unity": "https://github.com/Priyanshu-Dash/GoogleSDK-Unity.git?path=Packages/com.googlesignin.unity"
 }
 ```
 
-Or copy the `Packages/com.googlesignin.unity` folder into your project’s `Packages` directory.
+Or copy the `Packages/com.googlesignin.unity` folder into your project’s `Packages` directory (you still need EDM in the manifest for Android/iOS resolution).
 
 ## One-time setup
 
 1. **External Dependency Manager (EDM)**  
-   This package declares a dependency on `com.google.external-dependency-manager`. After import, use **Assets → External Dependency Manager → Android Resolver → Force Resolve** (and the iOS resolver if prompted) so Gradle / CocoaPods pick up Google libraries.
+   Ensure **`com.google.external-dependency-manager`** is in your **`Packages/manifest.json`** (see install above). After import, use **Assets → External Dependency Manager → Android Resolver → Force Resolve** (and the iOS resolver if prompted) so Gradle / CocoaPods pick up Google libraries.
 
 2. **Android**  
    - Add `google-services.json` from the [Firebase Console](https://console.firebase.google.com/) (or Google Cloud) under `Assets/`.  

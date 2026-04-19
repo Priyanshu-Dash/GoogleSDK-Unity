@@ -51,10 +51,22 @@ Use this when you want **`com.googlesignin.unity`** inside an **existing** Unity
 
 The Git URL **must** include **`?path=Packages/com.googlesignin.unity`** so Unity knows which folder in the repo is the UPM package (it must contain a **`package.json`** with `"name": "com.googlesignin.unity"`).
 
+### Prerequisite: External Dependency Manager (EDM)
+
+Unity does **not** allow a **Git UPM package** to declare another package using a **Git URL** inside its own `package.json` (you would see: *Version is invalid. Expected semantic versioning*). So **EDM is not a nested dependency** of this package; add it yourself in your project’s root **`Packages/manifest.json`** (Git URLs are OK there).
+
+Add **`com.google.external-dependency-manager`** first (same line many Firebase projects use):
+
+```json
+"com.google.external-dependency-manager": "https://github.com/googlesamples/unity-jar-resolver.git?path=upm"
+```
+
+If your project already has EDM or Firebase, skip duplicates.
+
 ### Option A — `Packages/manifest.json` (recommended)
 
 1. Open **`Packages/manifest.json`** in your project.
-2. Inside the top-level **`"dependencies"`** object, add this line (merge with existing entries; keep commas valid JSON):
+2. Inside the top-level **`"dependencies"`** object, ensure **EDM** is present (see above), then add **`com.googlesignin.unity`** (merge with existing entries; keep commas valid JSON):
 
 ```json
 "com.googlesignin.unity": "https://github.com/Priyanshu-Dash/GoogleSDK-Unity.git?path=Packages/com.googlesignin.unity"
@@ -65,6 +77,7 @@ Minimal example:
 ```json
 {
   "dependencies": {
+    "com.google.external-dependency-manager": "https://github.com/googlesamples/unity-jar-resolver.git?path=upm",
     "com.googlesignin.unity": "https://github.com/Priyanshu-Dash/GoogleSDK-Unity.git?path=Packages/com.googlesignin.unity",
     "com.unity.collab-proxy": "2.12.4"
   }

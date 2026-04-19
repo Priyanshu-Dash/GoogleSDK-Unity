@@ -1,6 +1,6 @@
 {
   "name": "com.googlesignin.unity",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "displayName": "Google Sign-In for Unity",
   "description": "Native Google Sign-In for Android and iOS from Unity (profile, ID token, server auth code). Includes External Dependency Manager entries for Play Services and the GoogleSignIn CocoaPod.",
   "unity": "6000.0",
@@ -11,9 +11,6 @@
     "android",
     "ios"
   ],
-  "dependencies": {
-    "com.google.external-dependency-manager": "https://github.com/googlesamples/unity-jar-resolver.git?path=upm"
-  },
   "samples": [
     {
       "displayName": "Basic Sample",
