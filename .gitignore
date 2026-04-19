@@ -57,6 +57,12 @@ ExportedObj/
 # Unity3D generated file on crash reports
 sysinfo.txt
 
+# Android signing keys (secrets — do not commit)
+*.keystore
+*.jks
+*.keystore.meta
+*.jks.meta
+
 # Builds
 *.apk
 *.aab

@@ -1,48 +1,48 @@
 {
   "project_info": {
-    "project_number": "898616092916",
-    "project_id": "crossplatform-auth-app",
-    "storage_bucket": "crossplatform-auth-app.firebasestorage.app"
+    "project_number": "684867416702",
+    "project_id": "authplugin-bfed8",
+    "storage_bucket": "authplugin-bfed8.firebasestorage.app"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:898616092916:android:8e9211018f4889fa0096a1",
+        "mobilesdk_app_id": "1:684867416702:android:91058ab26a085e97249e2f",
         "android_client_info": {
-          "package_name": "com.Priyanshu.GoogleSigninSDK"
+          "package_name": "com.Priyanshu.GoogleSignin"
         }
       },
       "oauth_client": [
         {
-          "client_id": "898616092916-o4paki4nda775ar84tscqfs2j87sucgl.apps.googleusercontent.com",
+          "client_id": "684867416702-4votss0fbd6997kaoi9ui3mg0s8t4r3f.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.Priyanshu.GoogleSigninSDK",
-            "certificate_hash": "723837a2656164e39d52a864ad217d8eeba26f51"
+            "package_name": "com.Priyanshu.GoogleSignin",
+            "certificate_hash": "94907a75ee129a0a813f6784e01cfeb6a2e61f20"
           }
         },
         {
-          "client_id": "898616092916-rcbfubmqcp7n9glpcvlr75ujds2genvb.apps.googleusercontent.com",
+          "client_id": "684867416702-sieh1ggm18fdrmf83137pl12behq3b6n.apps.googleusercontent.com",
           "client_type": 3
         }
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyB6shr37qmnOq2FC1zTfnVw2QzLo6KSreo"
+          "current_key": "AIzaSyA14vXz3AVSbu5BAlSFQbehR6KS6-cpLaY"
         }
       ],
       "services": {
         "appinvite_service": {
           "other_platform_oauth_client": [
             {
-              "client_id": "898616092916-rcbfubmqcp7n9glpcvlr75ujds2genvb.apps.googleusercontent.com",
+              "client_id": "684867416702-sieh1ggm18fdrmf83137pl12behq3b6n.apps.googleusercontent.com",
               "client_type": 3
             },
             {
-              "client_id": "898616092916-15qcum71b3crmoajue9jja2fpmnc1oog.apps.googleusercontent.com",
+              "client_id": "684867416702-5qtqc763cu7tm30d80o32ocp7pjdhrg0.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.Priyanshu.GoogleSigninSDK"
+                "bundle_id": "com.Priyanshu.GoogleSignin"
               }
             }
           ]
