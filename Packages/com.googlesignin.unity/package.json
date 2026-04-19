@@ -1,6 +1,6 @@
 {
   "name": "com.googlesignin.unity",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "displayName": "Google Sign-In for Unity",
   "description": "Native Google Sign-In for Android and iOS from Unity (profile, ID token, server auth code). Includes External Dependency Manager entries for Play Services and the GoogleSignIn CocoaPod.",
   "unity": "6000.0",
@@ -15,7 +15,7 @@
     {
       "displayName": "Basic Sample",
       "description": "Canvas UI demonstrating sign-in, sign-out, and current user. Requires TextMeshPro (included with default Unity templates).",
-      "path": "Samples/BasicSample"
+      "path": "Samples~/BasicSample"
     }
   ]
 }

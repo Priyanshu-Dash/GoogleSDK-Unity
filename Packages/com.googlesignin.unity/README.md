@@ -35,9 +35,7 @@ Or copy the `Packages/com.googlesignin.unity` folder into your project’s `Pack
    - Run **Force Resolve** / `pod install` as required by EDM after building or opening the generated Xcode project.
 
 4. **Sample scene**  
-   In the **Project** window open **Packages → Google Sign-In for Unity → Samples → Basic Sample** and open `SampleScene.unity`.  
-   You can also use **Window → Package Manager →** this package **→ Samples → Import** to copy the sample into `Assets/Samples/` if you prefer to edit it there.  
-   (The sample used to live under `Samples~`, which Unity hides from the Project window; it is now under `Samples` so it stays visible.)
+   Samples live under **`Samples~`** so they are **not** compiled as part of the package (this avoids duplicate **`GoogleSignIn.Samples`** assemblies if you also import the sample into `Assets/Samples/`). Use **Window → Package Manager →** this package **→ Samples → Import** to copy **Basic Sample** into your project, then open the scene from **`Assets/Samples/…`**. To browse the raw files without importing, use your OS file explorer under `Packages/com.googlesignin.unity/Samples~/BasicSample/`.
 
 ## Usage
 

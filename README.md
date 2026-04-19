@@ -13,7 +13,7 @@ Unity **6** sample project and embedded UPM package for **native Google Sign-In*
 | Path | Purpose |
 |------|--------|
 | `Packages/com.googlesignin.unity` | UPM package **`com.googlesignin.unity`** — runtime (`GoogleSignInManager`), Android Java, iOS native bridge, Editor post-process (iOS plist / URL scheme). |
-| `Packages/com.googlesignin.unity/Samples/BasicSample` | Sample scene + UI script demonstrating sign-in, sign-out, and “current user”. |
+| `Packages/com.googlesignin.unity/Samples~/BasicSample` | UPM sample (not compiled as part of the package). Import via **Package Manager → Samples** to copy into `Assets/Samples/` and avoid duplicate assemblies. |
 | `Assets/Plugins/Android` | Custom Gradle / manifest merges required for this Unity + GameActivity + Play Services setup (see below). |
 
 ---
@@ -41,7 +41,7 @@ Unity **6** sample project and embedded UPM package for **native Google Sign-In*
 
 5. **Sample**
 
-   Open **`Packages/com.googlesignin.unity/Samples/BasicSample/SampleScene.unity`**, assign UI references on **`GoogleSignInExample`** if needed, set optional **`webClientId`** / **`serverClientId`** for ID token / server auth code, then build to a device.
+   Import the **Basic Sample** from **Window → Package Manager →** this package **→ Samples** (copies into `Assets/Samples/…`), then open **`SampleScene`**. Alternatively open **`Packages/com.googlesignin.unity/Samples~/BasicSample/SampleScene.unity`** if your Unity version shows `Samples~` under the package. Assign UI references on **`GoogleSignInExample`** if needed, set optional **`webClientId`** / **`serverClientId`**, then build to a device.
 
 ---
 
@@ -144,6 +144,7 @@ If you copy the package alone into another project, compare your **`Assets/Plugi
 | **EDM: Jetifier / gradleTemplate.properties** | Enable **Custom Gradle Properties Template** and keep **`**ADDITIONAL_PROPERTIES**`** in `gradleTemplate.properties` for EDM injection. |
 | **Build: `IOException: Directory not empty` (MoveFinalPackage)** | Close tools locking the project; delete **`.utmp`**, **`Library/Bee/Android`**, and related Android artifacts; rebuild. |
 | **iOS: first sign-in cancels (-5)** | Avoid overlapping sign-in calls; do not tap Sign In repeatedly before the sheet returns. |
+| **`GoogleSignIn.Samples` already exists** (package + `Assets/Samples`) | Use package **v1.0.2+** (`Samples~`); delete the extra copy under **`Assets/Samples/…`** so only one **`GoogleSignIn.Samples.asmdef`** remains, then re-import the sample once if needed. |
 
 ---
 
