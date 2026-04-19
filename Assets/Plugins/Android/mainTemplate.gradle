@@ -8,11 +8,11 @@ dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
     implementation 'androidx.appcompat:appcompat:1.6.1'
     implementation 'androidx.core:core:1.9.0'
-    implementation 'androidx.games:games-activity:3.0.5'
+    // Unity 6 GameActivity native code expects locale APIs (GameActivity_getLocaleLanguage/Country) added in games-activity 4.x; 3.0.5 headers are too old.
+    implementation 'androidx.games:games-activity:4.4.1'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
-    
-    // Google Sign-In SDK
-    implementation 'com.google.android.gms:play-services-auth:20.7.0'
+    // Google Sign-In (required by com.googlesignin GoogleSignInHelper.java). Matches Editor/GoogleSignInDependencies.xml — re-add if Unity overwrites this template.
+    implementation 'com.google.android.gms:play-services-auth:21.2.0'
 }
 
 android {

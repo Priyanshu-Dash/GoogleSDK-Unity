@@ -3,23 +3,23 @@
 <plist version="1.0">
 <dict>
 	<key>CLIENT_ID</key>
-	<string>898616092916-15qcum71b3crmoajue9jja2fpmnc1oog.apps.googleusercontent.com</string>
+	<string>684867416702-5qtqc763cu7tm30d80o32ocp7pjdhrg0.apps.googleusercontent.com</string>
 	<key>REVERSED_CLIENT_ID</key>
-	<string>com.googleusercontent.apps.898616092916-15qcum71b3crmoajue9jja2fpmnc1oog</string>
+	<string>com.googleusercontent.apps.684867416702-5qtqc763cu7tm30d80o32ocp7pjdhrg0</string>
 	<key>ANDROID_CLIENT_ID</key>
-	<string>898616092916-o4paki4nda775ar84tscqfs2j87sucgl.apps.googleusercontent.com</string>
+	<string>684867416702-4votss0fbd6997kaoi9ui3mg0s8t4r3f.apps.googleusercontent.com</string>
 	<key>API_KEY</key>
-	<string>AIzaSyCoejIUwYNjw6O6GdT2esk-Kia6Y0gPwlo</string>
+	<string>AIzaSyCePQ1Ndu3N5gMr9e6gUvODmPH0Ytc3rrc</string>
 	<key>GCM_SENDER_ID</key>
-	<string>898616092916</string>
+	<string>684867416702</string>
 	<key>PLIST_VERSION</key>
 	<string>1</string>
 	<key>BUNDLE_ID</key>
-	<string>com.Priyanshu.GoogleSigninSDK</string>
+	<string>com.Priyanshu.GoogleSignin</string>
 	<key>PROJECT_ID</key>
-	<string>crossplatform-auth-app</string>
+	<string>authplugin-bfed8</string>
 	<key>STORAGE_BUCKET</key>
-	<string>crossplatform-auth-app.firebasestorage.app</string>
+	<string>authplugin-bfed8.firebasestorage.app</string>
 	<key>IS_ADS_ENABLED</key>
 	<false></false>
 	<key>IS_ANALYTICS_ENABLED</key>
@@ -31,6 +31,6 @@
 	<key>IS_SIGNIN_ENABLED</key>
 	<true></true>
 	<key>GOOGLE_APP_ID</key>
-	<string>1:898616092916:ios:11dcd3bfcc3dbf600096a1</string>
+	<string>1:684867416702:ios:a253064184928e2f249e2f</string>
 </dict>
 </plist>
